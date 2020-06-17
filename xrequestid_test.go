@@ -14,7 +14,7 @@ func TestNewXRequestId(t *testing.T) {
 	assert.Len(t, result, 36)
 }
 
-func TestXRequestId_ServeHTTP(t *testing.T) {
+func TestMiddleware_ServeHTTP(t *testing.T) {
 	type fields struct {
 		logger *zap.Logger
 	}
