@@ -17,6 +17,7 @@ func TestNewXRequestId(t *testing.T) {
 func TestMiddleware_ServeHTTP(t *testing.T) {
 	type fields struct {
 		logger *zap.Logger
+		disabled bool
 	}
 	type args struct {
 		writer      http.ResponseWriter
@@ -29,6 +30,26 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
+		{"Given no X-Request-Id header and disabled, when ServeHTTP, then leave as is.",
+			fields{
+				logger: zaptest.NewLogger(t),
+				disabled: true,
+			},
+			args{
+				writer: nil,
+				request: &http.Request{
+					Header: http.Header{},
+				},
+				nextHandler: AssertionHandler{
+					t: t,
+					assertions: func(t *testing.T, r *http.Request) {
+						actual := r.Header.Get("X-Request-Id")
+						assert.Empty(t, actual)
+					},
+				},
+			},
+			false,
+		},
 		{"Given no X-Request-Id header, when ServeHTTP, then generate one and add to request.",
 			fields{
 				logger: zaptest.NewLogger(t),
@@ -40,6 +61,10 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 				},
 				nextHandler: AssertionHandler{
 					t: t,
+					assertions: func(t *testing.T, r *http.Request) {
+						actual := r.Header.Get("X-Request-Id")
+						assert.NotEmpty(t, actual)
+					},
 				},
 			},
 			false,
@@ -57,6 +82,10 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 				},
 				nextHandler: AssertionHandler{
 					t: t,
+					assertions: func(t *testing.T, r *http.Request) {
+						actual := r.Header.Get("X-Request-Id")
+						assert.NotEmpty(t, actual)
+					},
 				},
 			},
 			false,
@@ -74,6 +103,10 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 				},
 				nextHandler: AssertionHandler{
 					t: t,
+					assertions: func(t *testing.T, r *http.Request) {
+						actual := r.Header.Get("X-Request-Id")
+						assert.NotEmpty(t, actual)
+					},
 				},
 			},
 			false,
@@ -91,7 +124,10 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 				},
 				nextHandler: AssertionHandler{
 					t:        t,
-					expected: "66b5651c-b01b-11ea-b3de-0242ac130004",
+					assertions: func(t *testing.T, r *http.Request) {
+						actual := r.Header.Get("X-Request-Id")
+						assert.Equal(t, "66b5651c-b01b-11ea-b3de-0242ac130004", actual)
+					},
 				},
 			},
 			false,
@@ -101,6 +137,7 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			xr := Middleware{
 				logger: tt.fields.logger,
+				Disabled: tt.fields.disabled,
 			}
 			if err := xr.ServeHTTP(tt.args.writer, tt.args.request, tt.args.nextHandler); (err != nil) != tt.wantErr {
 				t.Errorf("ServeHTTP() error = %v, wantErr %v", err, tt.wantErr)
@@ -111,14 +148,14 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 
 type AssertionHandler struct {
 	t        *testing.T
-	expected string
+	assertions assertFunc
 }
 
 func (a AssertionHandler) ServeHTTP(_ http.ResponseWriter, request *http.Request) error {
-	actual := request.Header.Get("X-Request-Id")
-	assert.NotEmpty(a.t, actual)
-	if len(a.expected) != 0 {
-		assert.Equal(a.t, a.expected, actual)
-	}
+	a.assertions(a.t, request)
 	return nil
 }
+
+type assertFunc func(t *testing.T, r *http.Request)
+
+

@@ -22,9 +22,10 @@ func init() {
 
 type Middleware struct {
 	logger *zap.Logger
+	Disabled bool `json:"disabled"`
 }
 
-func (x Middleware) CaddyModule() caddy.ModuleInfo {
+func (m Middleware) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
 		ID:  "http.handlers.x_request_id",
 		New: func() caddy.Module { return new(Middleware) },
@@ -32,29 +33,31 @@ func (x Middleware) CaddyModule() caddy.ModuleInfo {
 }
 
 // Provision sets up the module.
-func (x *Middleware) Provision(ctx caddy.Context) error {
-	x.logger = ctx.Logger(x) // g.logger is a *zap.Logger
+func (m *Middleware) Provision(ctx caddy.Context) error {
+	m.logger = ctx.Logger(m) // g.logger is a *zap.Logger
 	return nil
 }
 
 // Validate validates that the module has a usable config.
-func (x Middleware) Validate() error {
+func (m Middleware) Validate() error {
 	// TODO: validate the module's setup
 	return nil
 }
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
-func (x Middleware) ServeHTTP(writer http.ResponseWriter, request *http.Request, nextHandler caddyhttp.Handler) error {
-	requestId := request.Header.Get("X-Request-Id")
-	if len(strings.TrimSpace(requestId)) == 0 {
-		request.Header.Set("X-Request-Id", NewXRequestId())
-		x.logger.Debug("Adding X-Request-Id request header and generating new value.",
-			zap.String("X-Request-Id", request.Header.Get("X-Request-Id")),
-		)
-	} else {
-		x.logger.Debug("Found existing X-Request-Id request header and using it.",
-			zap.String("X-Request-Id", request.Header.Get("X-Request-Id")),
-		)
+func (m Middleware) ServeHTTP(writer http.ResponseWriter, request *http.Request, nextHandler caddyhttp.Handler) error {
+	if !m.Disabled {
+		requestId := request.Header.Get("X-Request-Id")
+		if len(strings.TrimSpace(requestId)) == 0 {
+			request.Header.Set("X-Request-Id", NewXRequestId())
+			m.logger.Debug("Adding X-Request-Id request header and generating new value.",
+				zap.String("X-Request-Id", request.Header.Get("X-Request-Id")),
+			)
+		} else {
+			m.logger.Debug("Found existing X-Request-Id request header and using it.",
+				zap.String("X-Request-Id", request.Header.Get("X-Request-Id")),
+			)
+		}
 	}
 	return nextHandler.ServeHTTP(writer, request)
 }
