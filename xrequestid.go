@@ -11,43 +11,43 @@ import (
 
 var (
 	// Interface guards to ensure this module implements the following interfaces
-	_ caddy.Provisioner           = (*XRequestId)(nil)
-	_ caddy.Validator             = (*XRequestId)(nil)
-	_ caddyhttp.MiddlewareHandler = (*XRequestId)(nil)
+	_ caddy.Provisioner           = (*Middleware)(nil)
+	_ caddy.Validator             = (*Middleware)(nil)
+	_ caddyhttp.MiddlewareHandler = (*Middleware)(nil)
 )
 
 func init() {
-	caddy.RegisterModule(XRequestId{})
+	caddy.RegisterModule(Middleware{})
 }
 
-type XRequestId struct {
+type Middleware struct {
 	logger *zap.Logger
 }
 
-func (x XRequestId) CaddyModule() caddy.ModuleInfo {
+func (x Middleware) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "http.handlers.xrequestid",
-		New: func() caddy.Module { return new(XRequestId) },
+		ID:  "http.handlers.x_request_id",
+		New: func() caddy.Module { return new(Middleware) },
 	}
 }
 
 // Provision sets up the module.
-func (x *XRequestId) Provision(ctx caddy.Context) error {
+func (x *Middleware) Provision(ctx caddy.Context) error {
 	x.logger = ctx.Logger(x) // g.logger is a *zap.Logger
 	return nil
 }
 
 // Validate validates that the module has a usable config.
-func (x XRequestId) Validate() error {
+func (x Middleware) Validate() error {
 	// TODO: validate the module's setup
 	return nil
 }
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
-func (x XRequestId) ServeHTTP(writer http.ResponseWriter, request *http.Request, nextHandler caddyhttp.Handler) error {
+func (x Middleware) ServeHTTP(writer http.ResponseWriter, request *http.Request, nextHandler caddyhttp.Handler) error {
 	requestId := request.Header.Get("X-Request-Id")
 	if len(strings.TrimSpace(requestId)) == 0 {
-		request.Header.Set("X-Request-Id", newUuid())
+		request.Header.Set("X-Request-Id", NewXRequestId())
 		x.logger.Debug("Adding X-Request-Id request header and generating new value.",
 			zap.String("X-Request-Id", request.Header.Get("X-Request-Id")),
 		)
@@ -59,6 +59,6 @@ func (x XRequestId) ServeHTTP(writer http.ResponseWriter, request *http.Request,
 	return nextHandler.ServeHTTP(writer, request)
 }
 
-func newUuid() string {
+func NewXRequestId() string {
 	return uuid.New().String()
 }

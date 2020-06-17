@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-func TestNewUuid(t *testing.T) {
-	result := newUuid()
+func TestNewXRequestId(t *testing.T) {
+	result := NewXRequestId()
 	assert.Len(t, result, 36)
 }
 
@@ -99,7 +99,7 @@ func TestXRequestId_ServeHTTP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			xr := XRequestId{
+			xr := Middleware{
 				logger: tt.fields.logger,
 			}
 			if err := xr.ServeHTTP(tt.args.writer, tt.args.request, tt.args.nextHandler); (err != nil) != tt.wantErr {
