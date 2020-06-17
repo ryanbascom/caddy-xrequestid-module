@@ -22,7 +22,7 @@ func init() {
 
 type Middleware struct {
 	logger *zap.Logger
-	Disabled bool `json:"disabled"`
+	Disabled bool `json:"disabled,omitempty"`
 }
 
 func (m Middleware) CaddyModule() caddy.ModuleInfo {
