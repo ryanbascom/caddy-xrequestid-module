@@ -26,7 +26,7 @@ type XRequestId struct {
 
 func (x XRequestId) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "http.handlers.headers.xrequestid",
+		ID:  "http.handlers.xrequestid",
 		New: func() caddy.Module { return new(XRequestId) },
 	}
 }
