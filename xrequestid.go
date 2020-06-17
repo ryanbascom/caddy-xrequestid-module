@@ -47,7 +47,7 @@ func (x XRequestId) Validate() error {
 func (x XRequestId) ServeHTTP(writer http.ResponseWriter, request *http.Request, nextHandler caddyhttp.Handler) error {
 	requestId := request.Header.Get("X-Request-Id")
 	if len(strings.TrimSpace(requestId)) == 0 {
-		request.Header.Set("X-Request-Id", NewUuid())
+		request.Header.Set("X-Request-Id", newUuid())
 		x.logger.Debug("Adding X-Request-Id request header and generating new value.",
 			zap.String("X-Request-Id", request.Header.Get("X-Request-Id")),
 		)
@@ -59,6 +59,6 @@ func (x XRequestId) ServeHTTP(writer http.ResponseWriter, request *http.Request,
 	return nextHandler.ServeHTTP(writer, request)
 }
 
-func NewUuid() string {
+func newUuid() string {
 	return uuid.New().String()
 }

@@ -4,12 +4,13 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 	"net/http"
 	"testing"
 )
 
 func TestNewUuid(t *testing.T) {
-	result := NewUuid()
+	result := newUuid()
 	assert.Len(t, result, 36)
 }
 
@@ -30,7 +31,7 @@ func TestXRequestId_ServeHTTP(t *testing.T) {
 	}{
 		{"Given no X-Request-Id header, when ServeHTTP, then generate one and add to request.",
 			fields{
-				logger: nil,
+				logger: zaptest.NewLogger(t),
 			},
 			args{
 				writer: nil,
@@ -43,9 +44,9 @@ func TestXRequestId_ServeHTTP(t *testing.T) {
 			},
 			false,
 		},
-		{"Given an empty X-Request-Id header, when ServeHTTP, then generate one and add to request.",
+		{"Given an X-Request-Id header value that is empty, when ServeHTTP, then generate one and add to request.",
 			fields{
-				logger: nil,
+				logger: zaptest.NewLogger(t),
 			},
 			args{
 				writer: nil,
@@ -60,9 +61,9 @@ func TestXRequestId_ServeHTTP(t *testing.T) {
 			},
 			false,
 		},
-		{"Given an all whitespace X-Request-Id header, when ServeHTTP, then generate one and add to request.",
+		{"Given an X-Request-Id header value that is all whitespace, when ServeHTTP, then generate one and add to request.",
 			fields{
-				logger: nil,
+				logger: zaptest.NewLogger(t),
 			},
 			args{
 				writer: nil,
@@ -77,9 +78,9 @@ func TestXRequestId_ServeHTTP(t *testing.T) {
 			},
 			false,
 		},
-		{"Given a non empty X-Request-Id header, when ServeHTTP, then leave it as is.",
+		{"Given an X-Request-Id header value, when ServeHTTP, then leave it as is.",
 			fields{
-				logger: nil,
+				logger: zaptest.NewLogger(t),
 			},
 			args{
 				writer: nil,
