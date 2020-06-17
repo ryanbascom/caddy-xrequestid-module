@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
-func TestNewXRequestId(t *testing.T) {
-	result := NewXRequestId()
+func TestNewId(t *testing.T) {
+	result := NewId()
 	assert.Len(t, result, 36)
 }
 
-func TestMiddleware_ServeHTTP(t *testing.T) {
+func TestXRequestId_ServeHTTP(t *testing.T) {
 	type fields struct {
 		logger *zap.Logger
 		disabled bool
@@ -135,7 +135,7 @@ func TestMiddleware_ServeHTTP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			xr := Middleware{
+			xr := XRequestId{
 				logger: tt.fields.logger,
 				Disabled: tt.fields.disabled,
 			}
